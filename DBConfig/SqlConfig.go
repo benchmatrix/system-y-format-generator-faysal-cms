@@ -81,7 +81,7 @@ func GetDB2(config models.Configuration) (*sql.DB, error) {
 func LoadConfig(path string) (config models.Configuration, err error) {
 	viper.AddConfigPath(path)
 	//change name to app_prod for production
-	os.Setenv("Active_Profile", "app_faysalLocal")
+	os.Setenv("Active_Profile", "app_prod")
 	viper.SetConfigName(os.Getenv("Active_Profile"))
 	fmt.Println(os.Getenv("Active_Profile") + " Selected")
 	viper.SetConfigType("env")
