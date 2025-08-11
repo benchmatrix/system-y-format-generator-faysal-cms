@@ -143,36 +143,6 @@ func GetOpenExceptionDetails(db *sql.DB, dbApproved *sql.DB, reportTable string)
 	}
 }
 
-func GetMenuAlertActivityDetails(db *sql.DB, dbApproved *sql.DB, reportTable string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		params := mux.Vars(r)
-		if params["transactioncode"] == "" || params["alertActivityKey"] == "" || params["approvedFlag"] == "" {
-			log.Printf("Missing parameters in GetMenuAlertActivityDetails")
-			http.Error(w, "Missing required parameters", http.StatusBadRequest)
-			return
-		}
-
-		transId, err := strconv.Atoi(params["transactioncode"])
-		if err != nil {
-			log.Printf("Invalid transactioncode: %v", err)
-			http.Error(w, "Invalid transactioncode", http.StatusBadRequest)
-			return
-		}
-
-		fromApproved, err := strconv.ParseBool(params["approvedFlag"])
-		if err != nil {
-			log.Printf("Invalid approvedFlag: %v", err)
-			http.Error(w, "Invalid approvedFlag", http.StatusBadRequest)
-			return
-		}
-
-		alertActivityKey := params["alertActivityKey"]
-		log.Printf("Fetching Menu Alert Activity for transaction %d", transId)
-		data := service.GetMenuAlertActivityDetails(db, dbApproved, transId, alertActivityKey, fromApproved, reportTable)
-		writeJSON(w, data)
-	}
-}
-
 func GetNewRMGObservationsDetails(db *sql.DB, dbApproved *sql.DB, reportTable string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		req, err := ParseRequestParams(r)
@@ -182,6 +152,30 @@ func GetNewRMGObservationsDetails(db *sql.DB, dbApproved *sql.DB, reportTable st
 		}
 		log.Printf("Fetching RMG Observations for transaction %d", req.TransactionCode)
 		data := service.GetNewRMGObservationsDetails(db, dbApproved, req.TransactionCode, req.ReferenceId, req.AlertActivityTypeKey, req.FromApproved, reportTable)
+		writeJSON(w, data)
+	}
+}
+func GetTotalAssetsDetails(db *sql.DB, dbApproved *sql.DB, reportTable string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		req, err := ParseRequestParams(r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		log.Printf("Fetching Total Assets for transaction %d", req.TransactionCode)
+		data := service.GetTotalAssetsDetails(db, dbApproved, req.TransactionCode, req.ReferenceId, req.AlertActivityTypeKey, req.FromApproved, reportTable)
+		writeJSON(w, data)
+	}
+}
+func GetMonitoringItemDetails(db *sql.DB, dbApproved *sql.DB, reportTable string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		req, err := ParseRequestParams(r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		log.Printf("Fetching Monitoring Items for transaction %d", req.TransactionCode)
+		data := service.GetMonitoringItemDetails(db, dbApproved, req.TransactionCode, req.ReferenceId, req.AlertActivityTypeKey, req.FromApproved, reportTable)
 		writeJSON(w, data)
 	}
 }

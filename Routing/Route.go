@@ -35,7 +35,6 @@ func InitRouter(ctx HandlerContext) http.Handler {
 	const basePath = "/config/cms/formatgeneratorfaysal"
 
 	api.HandleFunc(basePath+"/getHealth", controller.Health()).Methods("GET")
-	api.HandleFunc(basePath+"/menualertactivitydetails/{transactioncode}/{alertActivityKey}/{approvedFlag}", controller.GetMenuAlertActivityDetails(ctx.DB, ctx.DBApproved, ctx.ReportTable)).Methods("GET")
 	api.HandleFunc(basePath+"/facilitydetails/{transactioncode}/{existingTransactionCode}/{referenceId}/{InProgress}/{approvedTransaction}/{alertActivityTypeKey}/{approvedFlag}", controller.GetFacilityDetails(ctx.DB, ctx.DBApproved, ctx.ReportTable)).Methods("GET")
 	api.HandleFunc(basePath+"/approversComments/{transactioncode}/{existingTransactionCode}/{referenceId}/{InProgress}/{approvedTransaction}/{alertActivityTypeKey}/{approvedFlag}", controller.GetApproversCommentsDetails(ctx.DB, ctx.DBApproved, ctx.ReportTable)).Methods("GET")
 	api.HandleFunc(basePath+"/termsandconditiondetails/{transactioncode}/{existingTransactionCode}/{referenceId}/{InProgress}/{approvedTransaction}/{alertActivityTypeKey}/{approvedFlag}", controller.GetTermsAndConditionsDetails(ctx.DB, ctx.DBApproved, ctx.ReportTable)).Methods("GET")
@@ -43,6 +42,8 @@ func InitRouter(ctx HandlerContext) http.Handler {
 	api.HandleFunc(basePath+"/policydeferraldetails/{transactioncode}/{existingTransactionCode}/{referenceId}/{InProgress}/{approvedTransaction}/{alertActivityTypeKey}/{approvedFlag}", controller.GetDeferralDetails(ctx.DB, ctx.DBApproved, ctx.ReportTable)).Methods("GET")
 	api.HandleFunc(basePath+"/policywaiversdetails/{transactioncode}/{existingTransactionCode}/{referenceId}/{InProgress}/{approvedTransaction}/{alertActivityTypeKey}/{approvedFlag}", controller.GetWaiversDetails(ctx.DB, ctx.DBApproved, ctx.ReportTable)).Methods("GET")
 	api.HandleFunc(basePath+"/policyopenexceptionsdetails/{transactioncode}/{existingTransactionCode}/{referenceId}/{InProgress}/{approvedTransaction}/{alertActivityTypeKey}/{approvedFlag}", controller.GetOpenExceptionDetails(ctx.DB, ctx.DBApproved, ctx.ReportTable)).Methods("GET")
+	api.HandleFunc(basePath+"/totalassetdetails/{transactioncode}/{existingTransactionCode}/{referenceId}/{InProgress}/{approvedTransaction}/{alertActivityTypeKey}/{approvedFlag}", controller.GetTotalAssetsDetails(ctx.DB, ctx.DBApproved, ctx.ReportTable)).Methods("GET")
+	api.HandleFunc(basePath+"/monitoringitems/{transactioncode}/{existingTransactionCode}/{referenceId}/{InProgress}/{approvedTransaction}/{alertActivityTypeKey}/{approvedFlag}", controller.GetMonitoringItemDetails(ctx.DB, ctx.DBApproved, ctx.ReportTable)).Methods("GET")
 
 	myRouter.Handle("/api/customergetservice/prometheus", promhttp.Handler())
 

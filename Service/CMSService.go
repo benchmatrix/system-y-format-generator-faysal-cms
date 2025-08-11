@@ -6,32 +6,6 @@ import (
 	"system-y-format-generator-faysal-cms/Models/CMS"
 )
 
-func GetMenuAlertActivityDetails(Db *sql.DB, DbApproved *sql.DB, transId int, alertActivityKey string, fromApproved bool, ReportTable string) CMS.MenuAlertActivityDetails {
-	var request CMS.MenuAlertActivityDetails
-	query := `SELECT CASE WHEN (SELECT COUNT(*) FROM CONFIG_MENUALERTACTIVITYLINKAGE WHERE MENU_ID = (SELECT MENU_ID FROM CONFIG_MENU WHERE MENU_KEY ='CaFacility')
-	AND ALERTACTIVITYID = (SELECT ALERTACTIVITY_ID FROM CONFIG_ALERTACTIVITY WHERE ALERTACTIVITY_KEY = ?1)) >= 1 THEN Convert(bit,1) ELSE Convert(bit,0) END as facilitybool,
-	CASE WHEN (SELECT COUNT(*) FROM CONFIG_MENUALERTACTIVITYLINKAGE WHERE MENU_ID = (SELECT MENU_ID FROM CONFIG_MENU WHERE MENU_KEY ='RiskRating')
-	AND ALERTACTIVITYID = (SELECT ALERTACTIVITY_ID FROM CONFIG_ALERTACTIVITY WHERE ALERTACTIVITY_KEY = ?1)) >= 1 THEN Convert(bit,1) ELSE Convert(bit,0)  END as riskratingbool,
-	CASE WHEN (SELECT COUNT(*) FROM CONFIG_MENUALERTACTIVITYLINKAGE WHERE MENU_ID = (SELECT MENU_ID FROM CONFIG_MENU WHERE MENU_KEY ='FacColAssociationTree')
-	AND ALERTACTIVITYID = (SELECT ALERTACTIVITY_ID FROM CONFIG_ALERTACTIVITY WHERE ALERTACTIVITY_KEY = ?1)) >= 1 THEN Convert(bit,1) ELSE Convert(bit,0)  END as facilitycoveragebool`
-
-	rows, err := Db.Query(query, alertActivityKey, alertActivityKey, alertActivityKey)
-	if err != nil {
-		log.Printf("Error executing MenuAlertActivityDetails query: %v", err)
-		return request
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		err = rows.Scan(&request.Facilitybool, &request.Riskratingbool, &request.FacilityCoveragebool)
-		if err != nil {
-			log.Printf("Error scanning MenuAlertActivityDetails row: %v", err)
-		}
-	}
-
-	return request
-}
-
 func GetNewRMGObservationsDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.RMGNewObservationDetails {
 
 	query := `SELECT
@@ -604,4 +578,787 @@ func GetApproversCommentsDetails(Db *sql.DB, DbApproved *sql.DB, transId int, re
 	}
 
 	return approversComments
+}
+
+func GetTotalAssetsDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) CMS.TotalAssetsDetails {
+
+	//var rows *sql.Rows
+	//var totalAssetsList []CMS.TotalAssetsDetails
+	//for rows.Next() {
+	var totalAssets CMS.TotalAssetsDetails
+	currentAssets := GetCurrentAssetsDetails(Db, DbApproved, transId, referenceId, alertActivityTypeKey, fromApproved, ReportTable)
+	totalAssets.CurrentAssets = currentAssets
+
+	fixedAssets := GetFixedAssetsDetails(Db, DbApproved, transId, referenceId, alertActivityTypeKey, fromApproved, ReportTable)
+	totalAssets.FixedAssets = fixedAssets
+
+	mortgage := GetMortgageDetails(Db, DbApproved, transId, referenceId, alertActivityTypeKey, fromApproved, ReportTable)
+	totalAssets.Mortgage = mortgage
+
+	stocks := GetStocksHeldUnderPledgeDetails(Db, DbApproved, transId, referenceId, alertActivityTypeKey, fromApproved, ReportTable)
+	totalAssets.StocksHeldUnderPledge = stocks
+
+	pledge := GetPledgeOfSharesDetails(Db, DbApproved, transId, referenceId, alertActivityTypeKey, fromApproved, ReportTable)
+	totalAssets.PledgeOfShares = pledge
+
+	gop := GetGopDetails(Db, DbApproved, transId, referenceId, alertActivityTypeKey, fromApproved, ReportTable)
+	totalAssets.Gop = gop
+
+	cashCollateral := GetCashCollateralDetails(Db, DbApproved, transId, referenceId, alertActivityTypeKey, fromApproved, ReportTable)
+	totalAssets.CashCollateral = cashCollateral
+
+	collateralSummary := GetCollateralSummaryDetails(Db, DbApproved, transId, referenceId, alertActivityTypeKey, fromApproved, ReportTable)
+	totalAssets.CollateralSummary = collateralSummary
+
+	totalcurrentAssets := GetTotalCurrentAssetsDetails(Db, DbApproved, transId, referenceId, alertActivityTypeKey, fromApproved, ReportTable)
+	totalAssets.TotalCurrentAssets = totalcurrentAssets
+
+	totalfixedAssets := GetTotalFixedAssetsDetails(Db, DbApproved, transId, referenceId, alertActivityTypeKey, fromApproved, ReportTable)
+	totalAssets.TotalFixedAssets = totalfixedAssets
+
+	totalmortgage := GetTotalMortgageDetails(Db, DbApproved, transId, referenceId, alertActivityTypeKey, fromApproved, ReportTable)
+	totalAssets.TotalMortgage = totalmortgage
+
+	totalstocks := GetTotalStocksHeldUnderPledgeDetails(Db, DbApproved, transId, referenceId, alertActivityTypeKey, fromApproved, ReportTable)
+	totalAssets.TotalStocksHeldUnderPledge = totalstocks
+
+	totalpledge := GetTotalPledgeOfSharesDetails(Db, DbApproved, transId, referenceId, alertActivityTypeKey, fromApproved, ReportTable)
+	totalAssets.TotalPledgeOfShares = totalpledge
+
+	totalgop := GetTotalGopDetails(Db, DbApproved, transId, referenceId, alertActivityTypeKey, fromApproved, ReportTable)
+	totalAssets.TotalGop = totalgop
+
+	totalcashCollateral := GetTotalCashCollateralDetails(Db, DbApproved, transId, referenceId, alertActivityTypeKey, fromApproved, ReportTable)
+	totalAssets.TotalCashCollateral = totalcashCollateral
+
+	totalcollateralSummary := GetTotalCollateralSummaryDetails(Db, DbApproved, transId, referenceId, alertActivityTypeKey, fromApproved, ReportTable)
+	totalAssets.TotalCollateralSummary = totalcollateralSummary
+
+	//	totalAssetsList = append(totalAssetsList, totalAssets)
+	//}
+	return totalAssets
+}
+
+func GetCurrentAssetsDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.TotalAssetsChild {
+
+	query := `SELECT 1 as id, 'Current Assets' as Item, ISNULL(FORMAT(5000,'###,###,##0'),'-') as amount, 'secured' as status
+	---FROM ` + ReportTable + `CUSTOMER_SECURITY CS
+	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+
+	rows, err := Db.Query(query)
+	if err != nil {
+		log.Printf("Error executing GetCurrentAssetsDetails query: %v", err)
+		return nil
+	}
+	defer rows.Close()
+
+	var currentAssets []CMS.TotalAssetsChild
+	for rows.Next() {
+		var item CMS.TotalAssetsChild
+		err = rows.Scan(&item.Id, &item.Item, &item.Amount, &item.Status)
+		if err != nil {
+			log.Printf("Error scanning GetCurrentAssetsDetails row: %v", err)
+			continue
+		}
+		currentAssets = append(currentAssets, item)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("Row iteration error in GetCurrentAssetsDetails: %v", err)
+	}
+
+	return currentAssets
+}
+
+func GetFixedAssetsDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.TotalAssetsChild {
+
+	query := `SELECT 2 as id, 'Fixed Assets' as Item, ISNULL(FORMAT(6000,'###,###,##0'),'-') as amount, 'secured' as status
+	--FROM ` + ReportTable + `CUSTOMER_SECURITY CS
+	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+
+	rows, err := Db.Query(query)
+	if err != nil {
+		log.Printf("Error executing GetFixedAssetsDetails query: %v", err)
+		return nil
+	}
+	defer rows.Close()
+
+	var fixedAssets []CMS.TotalAssetsChild
+	for rows.Next() {
+		var item CMS.TotalAssetsChild
+		err = rows.Scan(&item.Id, &item.Item, &item.Amount, &item.Status)
+		if err != nil {
+			log.Printf("Error scanning GetFixedAssetsDetails row: %v", err)
+			continue
+		}
+		fixedAssets = append(fixedAssets, item)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("Row iteration error in GetFixedAssetsDetails: %v", err)
+	}
+
+	return fixedAssets
+}
+
+func GetMortgageDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.TotalAssetsChild {
+
+	query := `SELECT 3 as id, 'Mortgage' as Item, ISNULL(FORMAT(7000,'###,###,##0'),'-') as amount, 'secured' as status
+	--FROM ` + ReportTable + `CUSTOMER_SECURITY CS
+	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+
+	rows, err := Db.Query(query)
+	if err != nil {
+		log.Printf("Error executing GetMortgageDetails query: %v", err)
+		return nil
+	}
+	defer rows.Close()
+
+	var mortgage []CMS.TotalAssetsChild
+	for rows.Next() {
+		var item CMS.TotalAssetsChild
+		err = rows.Scan(&item.Id, &item.Item, &item.Amount, &item.Status)
+		if err != nil {
+			log.Printf("Error scanning GetMortgageDetails row: %v", err)
+			continue
+		}
+		mortgage = append(mortgage, item)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("Row iteration error in GetMortgageDetails: %v", err)
+	}
+
+	return mortgage
+}
+
+func GetStocksHeldUnderPledgeDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.TotalAssetsChild {
+
+	query := `SELECT 4 as id, 'Stocks Held Under Pledge' as Item, ISNULL(FORMAT(8000,'###,###,##0'),'-') as amount, 'secured' as status
+	--FROM ` + ReportTable + `CUSTOMER_SECURITY CS
+	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+
+	rows, err := Db.Query(query)
+	if err != nil {
+		log.Printf("Error executing GetStocksHeldUnderPledgeDetails query: %v", err)
+		return nil
+	}
+	defer rows.Close()
+
+	var stocks []CMS.TotalAssetsChild
+	for rows.Next() {
+		var item CMS.TotalAssetsChild
+		err = rows.Scan(&item.Id, &item.Item, &item.Amount, &item.Status)
+		if err != nil {
+			log.Printf("Error scanning GetStocksHeldUnderPledgeDetails row: %v", err)
+			continue
+		}
+		stocks = append(stocks, item)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("Row iteration error in GetStocksHeldUnderPledgeDetails: %v", err)
+	}
+
+	return stocks
+}
+
+func GetCashCollateralDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.TotalAssetsChild {
+
+	query := `SELECT 5 as id, 'Cash Collateral' as Item, ISNULL(FORMAT(9000,'###,###,##0'),'-') as amount, 'N/A' as status
+	--FROM ` + ReportTable + `CUSTOMER_SECURITY CS
+	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+
+	rows, err := Db.Query(query)
+	if err != nil {
+		log.Printf("Error executing GetCashCollateralDetails query: %v", err)
+		return nil
+	}
+	defer rows.Close()
+
+	var cashCollateral []CMS.TotalAssetsChild
+	for rows.Next() {
+		var item CMS.TotalAssetsChild
+		err = rows.Scan(&item.Id, &item.Item, &item.Amount, &item.Status)
+		if err != nil {
+			log.Printf("Error scanning GetCashCollateralDetails row: %v", err)
+			continue
+		}
+		cashCollateral = append(cashCollateral, item)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("Row iteration error in GetCashCollateralDetails: %v", err)
+	}
+
+	return cashCollateral
+}
+
+func GetGopDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.TotalAssetsChild {
+
+	query := `SELECT 6 as id, 'Gop' as Item, ISNULL(FORMAT(10000,'###,###,##0'),'-') as amount, 'N/A' as status
+	--FROM ` + ReportTable + `CUSTOMER_SECURITY CS
+	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+
+	rows, err := Db.Query(query)
+	if err != nil {
+		log.Printf("Error executing GetGopDetails query: %v", err)
+		return nil
+	}
+	defer rows.Close()
+
+	var gop []CMS.TotalAssetsChild
+	for rows.Next() {
+		var item CMS.TotalAssetsChild
+		err = rows.Scan(&item.Id, &item.Item, &item.Amount, &item.Status)
+		if err != nil {
+			log.Printf("Error scanning GetGopDetails row: %v", err)
+			continue
+		}
+		gop = append(gop, item)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("Row iteration error in GetGopDetails: %v", err)
+	}
+
+	return gop
+}
+
+func GetPledgeOfSharesDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.TotalAssetsChild {
+
+	query := `SELECT 7 as id, 'Pledge of Shares' as Item, ISNULL(FORMAT(11000,'###,###,##0'),'-') as amount, 'N/A' as status
+	--FROM ` + ReportTable + `CUSTOMER_SECURITY CS
+	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+
+	rows, err := Db.Query(query)
+	if err != nil {
+		log.Printf("Error executing GetPledgeOfSharesDetails query: %v", err)
+		return nil
+	}
+	defer rows.Close()
+
+	var pledge []CMS.TotalAssetsChild
+	for rows.Next() {
+		var item CMS.TotalAssetsChild
+		err = rows.Scan(&item.Id, &item.Item, &item.Amount, &item.Status)
+		if err != nil {
+			log.Printf("Error scanning GetPledgeOfSharesDetails row: %v", err)
+			continue
+		}
+		pledge = append(pledge, item)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("Row iteration error in GetPledgeOfSharesDetails: %v", err)
+	}
+
+	return pledge
+}
+
+func GetCollateralSummaryDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.CollateralSummary {
+
+	query := `SELECT ISNULL(FORMAT(5000,'###,###,##0'),'-') as currentassetamount, 'secured' as currentassetstatus, 
+	ISNULL(FORMAT(6000,'###,###,##0'),'-') as fixedassetamount, 'secured' as fixedassetstatus,
+	ISNULL(FORMAT(7000,'###,###,##0'),'-') as mortgageamount, 'secured' as mortgagestatus,
+	ISNULL(FORMAT(8000,'###,###,##0'),'-') as stockamount, 'N/A' as stockstatus,
+	ISNULL(FORMAT(9000,'###,###,##0'),'-') as cashcollateralamount, 'N/A' as cashcollateralstatus,
+	ISNULL(FORMAT(10000,'###,###,##0'),'-') as gopamount, 'N/A' as gopstatus,
+	ISNULL(FORMAT(11000,'###,###,##0'),'-') as pledgeamount, 'N/A' as pledgestatus
+	--FROM ` + ReportTable + `CUSTOMER_SECURITY CS
+	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+
+	rows, err := Db.Query(query)
+	if err != nil {
+		log.Printf("Error executing GetCollateralSummaryDetails query: %v", err)
+		return nil
+	}
+	defer rows.Close()
+
+	var collateralSummary []CMS.CollateralSummary
+	for rows.Next() {
+		var item CMS.CollateralSummary
+		err = rows.Scan(&item.CurrentAssetAmount, &item.CurrentAssetStatus,
+			&item.FixedAssetAmount, &item.FixedAssetStatus,
+			&item.MortgageAmount, &item.MortgageStatus,
+			&item.StockAmount, &item.StockStatus,
+			&item.CashCollateralAmount, &item.CashCollateralStatus,
+			&item.GopAmount, &item.GopStatus,
+			&item.PledgeAmount, &item.PledgeStatus)
+		if err != nil {
+			log.Printf("Error scanning GetCollateralSummaryDetails row: %v", err)
+			continue
+		}
+		collateralSummary = append(collateralSummary, item)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("Row iteration error in GetCollateralSummaryDetails: %v", err)
+	}
+
+	return collateralSummary
+}
+
+func GetTotalCurrentAssetsDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.TotalAssetsChildTotal {
+
+	query := `SELECT ISNULL(FORMAT(SUM(5000),'###,###,##0'),'-') as amount
+	---FROM ` + ReportTable + `CUSTOMER_SECURITY CS
+	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+
+	rows, err := Db.Query(query)
+	if err != nil {
+		log.Printf("Error executing GetTotalCurrentAssetsDetails query: %v", err)
+		return nil
+	}
+	defer rows.Close()
+
+	var currentAssets []CMS.TotalAssetsChildTotal
+	for rows.Next() {
+		var item CMS.TotalAssetsChildTotal
+		err = rows.Scan(&item.TotalAmount)
+		if err != nil {
+			log.Printf("Error scanning GetTotalCurrentAssetsDetails row: %v", err)
+			continue
+		}
+		currentAssets = append(currentAssets, item)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("Row iteration error in GetTotalCurrentAssetsDetails: %v", err)
+	}
+
+	return currentAssets
+}
+
+func GetTotalFixedAssetsDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.TotalAssetsChildTotal {
+
+	query := `SELECT ISNULL(FORMAT(SUM(6000),'###,###,##0'),'-') as amount
+	---FROM ` + ReportTable + `CUSTOMER_SECURITY CS
+	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+
+	rows, err := Db.Query(query)
+	if err != nil {
+		log.Printf("Error executing GetTotalFixedAssetsDetails query: %v", err)
+		return nil
+	}
+	defer rows.Close()
+
+	var fixedAssets []CMS.TotalAssetsChildTotal
+	for rows.Next() {
+		var item CMS.TotalAssetsChildTotal
+		err = rows.Scan(&item.TotalAmount)
+		if err != nil {
+			log.Printf("Error scanning GetTotalFixedAssetsDetails row: %v", err)
+			continue
+		}
+		fixedAssets = append(fixedAssets, item)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("Row iteration error in GetTotalFixedAssetsDetails: %v", err)
+	}
+
+	return fixedAssets
+}
+
+func GetTotalMortgageDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.TotalAssetsChildTotal {
+
+	query := `SELECT ISNULL(FORMAT(SUM(7000),'###,###,##0'),'-') as amount
+	---FROM ` + ReportTable + `CUSTOMER_SECURITY CS
+	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+
+	rows, err := Db.Query(query)
+	if err != nil {
+		log.Printf("Error executing GetTotalMortgageDetails query: %v", err)
+		return nil
+	}
+	defer rows.Close()
+
+	var mortgage []CMS.TotalAssetsChildTotal
+	for rows.Next() {
+		var item CMS.TotalAssetsChildTotal
+		err = rows.Scan(&item.TotalAmount)
+		if err != nil {
+			log.Printf("Error scanning GetTotalMortgageDetails row: %v", err)
+			continue
+		}
+		mortgage = append(mortgage, item)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("Row iteration error in GetTotalMortgageDetails: %v", err)
+	}
+
+	return mortgage
+}
+
+func GetTotalStocksHeldUnderPledgeDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.TotalAssetsChildTotal {
+
+	query := `SELECT ISNULL(FORMAT(SUM(8000),'###,###,##0'),'-') as amount
+	---FROM ` + ReportTable + `CUSTOMER_SECURITY CS
+	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+
+	rows, err := Db.Query(query)
+	if err != nil {
+		log.Printf("Error executing GetTotalStocksHeldUnderPledgeDetails query: %v", err)
+		return nil
+	}
+	defer rows.Close()
+
+	var stocks []CMS.TotalAssetsChildTotal
+	for rows.Next() {
+		var item CMS.TotalAssetsChildTotal
+		err = rows.Scan(&item.TotalAmount)
+		if err != nil {
+			log.Printf("Error scanning GetTotalStocksHeldUnderPledgeDetails row: %v", err)
+			continue
+		}
+		stocks = append(stocks, item)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("Row iteration error in GetTotalStocksHeldUnderPledgeDetails: %v", err)
+	}
+
+	return stocks
+}
+
+func GetTotalCashCollateralDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.TotalAssetsChildTotal {
+
+	query := `SELECT ISNULL(FORMAT(SUM(9000),'###,###,##0'),'-') as amount
+	---FROM ` + ReportTable + `CUSTOMER_SECURITY CS
+	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+
+	rows, err := Db.Query(query)
+	if err != nil {
+		log.Printf("Error executing GetTotalCashCollateralDetails query: %v", err)
+		return nil
+	}
+	defer rows.Close()
+
+	var cashcollateral []CMS.TotalAssetsChildTotal
+	for rows.Next() {
+		var item CMS.TotalAssetsChildTotal
+		err = rows.Scan(&item.TotalAmount)
+		if err != nil {
+			log.Printf("Error scanning GetTotalCashCollateralDetails row: %v", err)
+			continue
+		}
+		cashcollateral = append(cashcollateral, item)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("Row iteration error in GetTotalCashCollateralDetails: %v", err)
+	}
+
+	return cashcollateral
+}
+
+func GetTotalGopDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.TotalAssetsChildTotal {
+
+	query := `SELECT ISNULL(FORMAT(SUM(10000),'###,###,##0'),'-') as amount
+	---FROM ` + ReportTable + `CUSTOMER_SECURITY CS
+	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+
+	rows, err := Db.Query(query)
+	if err != nil {
+		log.Printf("Error executing GetTotalGopDetails query: %v", err)
+		return nil
+	}
+	defer rows.Close()
+
+	var gop []CMS.TotalAssetsChildTotal
+	for rows.Next() {
+		var item CMS.TotalAssetsChildTotal
+		err = rows.Scan(&item.TotalAmount)
+		if err != nil {
+			log.Printf("Error scanning GetTotalGopDetails row: %v", err)
+			continue
+		}
+		gop = append(gop, item)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("Row iteration error in GetTotalGopDetails: %v", err)
+	}
+
+	return gop
+}
+
+func GetTotalPledgeOfSharesDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.TotalAssetsChildTotal {
+
+	query := `SELECT ISNULL(FORMAT(SUM(11000),'###,###,##0'),'-') as amount
+	---FROM ` + ReportTable + `CUSTOMER_SECURITY CS
+	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+
+	rows, err := Db.Query(query)
+	if err != nil {
+		log.Printf("Error executing GetTotalPledgeOfSharesDetails query: %v", err)
+		return nil
+	}
+	defer rows.Close()
+
+	var pledge []CMS.TotalAssetsChildTotal
+	for rows.Next() {
+		var item CMS.TotalAssetsChildTotal
+		err = rows.Scan(&item.TotalAmount)
+		if err != nil {
+			log.Printf("Error scanning GetTotalPledgeOfSharesDetails row: %v", err)
+			continue
+		}
+		pledge = append(pledge, item)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("Row iteration error in GetTotalPledgeOfSharesDetails: %v", err)
+	}
+
+	return pledge
+}
+
+func GetTotalCollateralSummaryDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.TotalCollateralSummary {
+
+	query := `SELECT ISNULL(FORMAT(SUM(56000),'###,###,##0'),'-') as amount
+	---FROM ` + ReportTable + `CUSTOMER_SECURITY CS
+	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+
+	rows, err := Db.Query(query)
+	if err != nil {
+		log.Printf("Error executing GetTotalCollateralSummaryDetails query: %v", err)
+		return nil
+	}
+	defer rows.Close()
+
+	var collateralvalue []CMS.TotalCollateralSummary
+	for rows.Next() {
+		var item CMS.TotalCollateralSummary
+		err = rows.Scan(&item.TotalCollateralValue)
+		if err != nil {
+			log.Printf("Error scanning GetTotalCollateralSummaryDetails row: %v", err)
+			continue
+		}
+		collateralvalue = append(collateralvalue, item)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("Row iteration error in GetTotalCollateralSummaryDetails: %v", err)
+	}
+
+	return collateralvalue
+}
+
+func GetMonitoringItemDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) CMS.MonitoringItems {
+
+	//var rows *sql.Rows
+	//var totalAssetsList []CMS.TotalAssetsDetails
+	//for rows.Next() {
+	var monitoringitems CMS.MonitoringItems
+	takaful := GetTakafulMonitoringDetails(Db, DbApproved, transId, referenceId, alertActivityTypeKey, fromApproved, ReportTable)
+	monitoringitems.Takaful = takaful
+
+	fixedAssets := GetFixedAssetsExpiresDetails(Db, DbApproved, transId, referenceId, alertActivityTypeKey, fromApproved, ReportTable)
+	monitoringitems.FixedAssets = fixedAssets
+
+	stocks := GetInspectionOfStocksDetails(Db, DbApproved, transId, referenceId, alertActivityTypeKey, fromApproved, ReportTable)
+	monitoringitems.Stocks = stocks
+
+	currentassets := GetCurrentAssetsReportDetails(Db, DbApproved, transId, referenceId, alertActivityTypeKey, fromApproved, ReportTable)
+	monitoringitems.CurrentAssets = currentassets
+
+	pledge := GetPledgeStocksDetails(Db, DbApproved, transId, referenceId, alertActivityTypeKey, fromApproved, ReportTable)
+	monitoringitems.Pledge = pledge
+
+	monitoringsummary := GetMonitoringSummaryDetails(Db, DbApproved, transId, referenceId, alertActivityTypeKey, fromApproved, ReportTable)
+	monitoringitems.MonitoringSummary = monitoringsummary
+
+	//	totalAssetsList = append(totalAssetsList, totalAssets)
+	//}
+	return monitoringitems
+}
+
+func GetTakafulMonitoringDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.MonitoringItemsChild {
+
+	query := `SELECT 1 as id, 'TAKAFUL MONITORING' as Item, 'No Breach' as status
+	---FROM ` + ReportTable + `CUSTOMER_SECURITY CS
+	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+
+	rows, err := Db.Query(query)
+	if err != nil {
+		log.Printf("Error executing GetTakafulMonitoringDetails query: %v", err)
+		return nil
+	}
+	defer rows.Close()
+
+	var takaful []CMS.MonitoringItemsChild
+	for rows.Next() {
+		var item CMS.MonitoringItemsChild
+		err = rows.Scan(&item.Id, &item.Item, &item.Status)
+		if err != nil {
+			log.Printf("Error scanning GetTakafulMonitoringDetails row: %v", err)
+			continue
+		}
+		takaful = append(takaful, item)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("Row iteration error in GetTakafulMonitoringDetails: %v", err)
+	}
+
+	return takaful
+
+}
+
+func GetFixedAssetsExpiresDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.MonitoringItemsChild {
+
+	query := `SELECT 3 as id, 'FIXED ASSETS EXPIRIES' as Item, 'Breach' as status
+	---FROM ` + ReportTable + `CUSTOMER_SECURITY CS
+	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+
+	rows, err := Db.Query(query)
+	if err != nil {
+		log.Printf("Error executing GetFixedAssetsExpiresDetails query: %v", err)
+		return nil
+	}
+	defer rows.Close()
+
+	var fixedassets []CMS.MonitoringItemsChild
+	for rows.Next() {
+		var item CMS.MonitoringItemsChild
+		err = rows.Scan(&item.Id, &item.Item, &item.Status)
+		if err != nil {
+			log.Printf("Error scanning GetFixedAssetsExpiresDetails row: %v", err)
+			continue
+		}
+		fixedassets = append(fixedassets, item)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("Row iteration error in GetFixedAssetsExpiresDetails: %v", err)
+	}
+
+	return fixedassets
+}
+
+func GetInspectionOfStocksDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.MonitoringItemsChild {
+
+	query := `SELECT 2 as id, 'INSPECTION OF STOCKS' as Item, 'No Breach' as status
+	---FROM ` + ReportTable + `CUSTOMER_SECURITY CS
+	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+
+	rows, err := Db.Query(query)
+	if err != nil {
+		log.Printf("Error executing GetInspectionOfStocksDetails query: %v", err)
+		return nil
+	}
+	defer rows.Close()
+
+	var stocks []CMS.MonitoringItemsChild
+	for rows.Next() {
+		var item CMS.MonitoringItemsChild
+		err = rows.Scan(&item.Id, &item.Item, &item.Status)
+		if err != nil {
+			log.Printf("Error scanning GetInspectionOfStocksDetails row: %v", err)
+			continue
+		}
+		stocks = append(stocks, item)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("Row iteration error in GetInspectionOfStocksDetails: %v", err)
+	}
+
+	return stocks
+}
+
+func GetCurrentAssetsReportDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.MonitoringItemsChild {
+
+	query := `SELECT 4 as id, 'CURRENT ASSETS REPORT' as Item, 'Breach' as status
+	---FROM ` + ReportTable + `CUSTOMER_SECURITY CS
+	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+
+	rows, err := Db.Query(query)
+	if err != nil {
+		log.Printf("Error executing GetCurrentAssetsReportDetails query: %v", err)
+		return nil
+	}
+	defer rows.Close()
+
+	var currentassets []CMS.MonitoringItemsChild
+	for rows.Next() {
+		var item CMS.MonitoringItemsChild
+		err = rows.Scan(&item.Id, &item.Item, &item.Status)
+		if err != nil {
+			log.Printf("Error scanning GetCurrentAssetsReportDetails row: %v", err)
+			continue
+		}
+		currentassets = append(currentassets, item)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("Row iteration error in GetCurrentAssetsReportDetails: %v", err)
+	}
+
+	return currentassets
+}
+
+func GetPledgeStocksDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.MonitoringItemsChild {
+
+	query := `SELECT 5 as id, 'PLEDGE STOCKS' as Item, 'No Breach' as status
+	---FROM ` + ReportTable + `CUSTOMER_SECURITY CS
+	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+
+	rows, err := Db.Query(query)
+	if err != nil {
+		log.Printf("Error executing GetPledgeStocksDetails query: %v", err)
+		return nil
+	}
+	defer rows.Close()
+
+	var pledge []CMS.MonitoringItemsChild
+	for rows.Next() {
+		var item CMS.MonitoringItemsChild
+		err = rows.Scan(&item.Id, &item.Item, &item.Status)
+		if err != nil {
+			log.Printf("Error scanning GetPledgeStocksDetails row: %v", err)
+			continue
+		}
+		pledge = append(pledge, item)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("Row iteration error in GetPledgeStocksDetails: %v", err)
+	}
+
+	return pledge
+}
+
+func GetMonitoringSummaryDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.MonitoringSummary {
+
+	query := `SELECT 'No Breach' as takaful,'No Breach' as stocks,'No Breach' as fixedassets,'No Breach' as currentassets,'No Breach' as pledge
+	---FROM ` + ReportTable + `CUSTOMER_SECURITY CS
+	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+
+	rows, err := Db.Query(query)
+	if err != nil {
+		log.Printf("Error executing GetMonitoringSummaryDetails query: %v", err)
+		return nil
+	}
+	defer rows.Close()
+
+	var monitoringsummary []CMS.MonitoringSummary
+	for rows.Next() {
+		var item CMS.MonitoringSummary
+		err = rows.Scan(&item.Takaful, &item.Stocks, &item.FixedAssets, &item.CurrentAssets, &item.Pledge)
+		if err != nil {
+			log.Printf("Error scanning GetMonitoringSummaryDetails row: %v", err)
+			continue
+		}
+		monitoringsummary = append(monitoringsummary, item)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf("Row iteration error in GetMonitoringSummaryDetails: %v", err)
+	}
+
+	return monitoringsummary
 }
