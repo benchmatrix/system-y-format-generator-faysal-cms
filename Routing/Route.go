@@ -6,7 +6,6 @@ import (
 	"net/http"
 	controller "system-y-format-generator-faysal-cms/Controller"
 	dbconfig "system-y-format-generator-faysal-cms/DBConfig"
-	"system-y-format-generator-faysal-cms/authMiddleWare"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
@@ -24,13 +23,14 @@ func RoutingPaths() {
 	} else {
 		port := config.ServerAddress
 		Db, _ := dbconfig.GetDB(config)
+		DbApproved, _ := dbconfig.GetDB2(config)
 		var ReportTable = config.ReportTable
 		fmt.Println("ReportTable routing paths ", ReportTable)
 		myRouter := mux.NewRouter().StrictSlash(true)
 
 		//myRouter.Use(authMiddleWare.DbConnectionMiddleWare(Db))
 		api := myRouter.PathPrefix("/").Subrouter()
-		api.Use(authMiddleWare.AuthMiddleWare(Db))
+		//api.Use(authMiddleWare.AuthMiddleWare(Db))
 		api.HandleFunc("/config/cms/formatgeneratorfaysal/getHealth", controller.Health()).Methods("GET")
 		api.HandleFunc("/config/cms/formatgeneratorfaysal/facilitydetails/{transactioncode}/{existingTransactionCode}/{referenceId}/{InProgress}/{approvedTransaction}/{alertActivityTypeKey}/{approvedFlag}", controller.GetFacilityDetails(Db, DbApproved, ReportTable)).Methods("GET")
 		api.HandleFunc("/config/cms/formatgeneratorfaysal/approversComments/{transactioncode}/{existingTransactionCode}/{referenceId}/{InProgress}/{approvedTransaction}/{alertActivityTypeKey}/{approvedFlag}", controller.GetApproversCommentsDetails(Db, DbApproved, ReportTable)).Methods("GET")
