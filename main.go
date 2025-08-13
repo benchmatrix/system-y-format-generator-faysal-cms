@@ -10,5 +10,5 @@ import (
 func main() {
 	fmt.Println("Format Generator Faysal Running")
 
-	routing.RoutingPaths()
+	routing.StartServer()
 }
