@@ -607,11 +607,12 @@ func GetTotalAssetsDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenc
 
 func GetCurrentAssetsDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.TotalAssetsChild {
 
-	query := `SELECT 1 as id, 'Current Assets' as Item, ISNULL(FORMAT(5000,'###,###,##0'),'-') as amount, 'secured' as status
-	---FROM ` + ReportTable + `CUSTOMER_SECURITY CS
-	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+	query := `SELECT ISNULL(CS.CUSTOMERSECURITY_KEY,'-') as id, ISNULL(SEC.TITLE,'-') as Item, ISNULL(FORMAT(CS.MARKETVALUE,'###,###,##0'),'-') as amount, 'secured' as status
+	FROM CUSTOMER_SECURITYAPPROVED CS 
+	LEFT JOIN CONFIG_SECURITY SEC on SEC.SECURITY_ID = CS.SECURITY_CODE
+	WHERE CS.CUSTOMER_CODE = ?1 and SEC.SECURITY_KEY='S1914'`
 
-	rows, err := Db.Query(query)
+	rows, err := Db.Query(query, referenceId)
 	if err != nil {
 		log.Printf("Error executing GetCurrentAssetsDetails query: %v", err)
 		return nil
@@ -638,11 +639,12 @@ func GetCurrentAssetsDetails(Db *sql.DB, DbApproved *sql.DB, transId int, refere
 
 func GetFixedAssetsDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.TotalAssetsChild {
 
-	query := `SELECT 2 as id, 'Fixed Assets' as Item, ISNULL(FORMAT(6000,'###,###,##0'),'-') as amount, 'secured' as status
-	--FROM ` + ReportTable + `CUSTOMER_SECURITY CS
-	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+	query := `SELECT ISNULL(CS.CUSTOMERSECURITY_KEY,'-') as id, ISNULL(SEC.TITLE,'-') as Item, ISNULL(FORMAT(CS.MARKETVALUE,'###,###,##0'),'-') as amount, 'secured' as status
+	FROM CUSTOMER_SECURITYAPPROVED CS 
+	LEFT JOIN CONFIG_SECURITY SEC on SEC.SECURITY_ID = CS.SECURITY_CODE
+	WHERE CS.CUSTOMER_CODE = ?1 and SEC.SECURITY_KEY IN ('S1997','S2066','S2067','S2068','S2069','S2070')`
 
-	rows, err := Db.Query(query)
+	rows, err := Db.Query(query, referenceId)
 	if err != nil {
 		log.Printf("Error executing GetFixedAssetsDetails query: %v", err)
 		return nil
@@ -669,11 +671,13 @@ func GetFixedAssetsDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenc
 
 func GetMortgageDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.TotalAssetsChild {
 
-	query := `SELECT 3 as id, 'Mortgage' as Item, ISNULL(FORMAT(7000,'###,###,##0'),'-') as amount, 'secured' as status
-	--FROM ` + ReportTable + `CUSTOMER_SECURITY CS
-	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+	query := `SELECT ISNULL(CS.CUSTOMERSECURITY_KEY,'-') as id, ISNULL(SEC.TITLE,'-') as Item, ISNULL(FORMAT(CS.MARKETVALUE,'###,###,##0'),'-') as amount, 'secured' as status
+	FROM CUSTOMER_SECURITYAPPROVED CS 
+	LEFT JOIN CONFIG_SECURITY SEC on SEC.SECURITY_ID = CS.SECURITY_CODE
+	LEFT JOIN CONFIG_COLLATERALHANDLING CH on CH.COLLATERALHANDLING_ID = SEC.COLLATERALHANDLING_ID
+	WHERE CS.CUSTOMER_CODE = ?1 and CH.COLLATERALHANDLING_KEY = 'M'`
 
-	rows, err := Db.Query(query)
+	rows, err := Db.Query(query, referenceId)
 	if err != nil {
 		log.Printf("Error executing GetMortgageDetails query: %v", err)
 		return nil
@@ -700,11 +704,12 @@ func GetMortgageDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId
 
 func GetStocksHeldUnderPledgeDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.TotalAssetsChild {
 
-	query := `SELECT 4 as id, 'Stocks Held Under Pledge' as Item, ISNULL(FORMAT(8000,'###,###,##0'),'-') as amount, 'secured' as status
-	--FROM ` + ReportTable + `CUSTOMER_SECURITY CS
-	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+	query := `SELECT ISNULL(CS.CUSTOMERSECURITY_KEY,'-') as id, ISNULL(SEC.TITLE,'-') as Item, ISNULL(FORMAT(CS.MARKETVALUE,'###,###,##0'),'-') as amount, 'secured' as status
+	FROM CUSTOMER_SECURITYAPPROVED CS 
+	LEFT JOIN CONFIG_SECURITY SEC on SEC.SECURITY_ID = CS.SECURITY_CODE
+	WHERE CS.CUSTOMER_CODE = ?1 and SEC.SECURITY_KEY IN ('S1899','S1901')`
 
-	rows, err := Db.Query(query)
+	rows, err := Db.Query(query, referenceId)
 	if err != nil {
 		log.Printf("Error executing GetStocksHeldUnderPledgeDetails query: %v", err)
 		return nil
@@ -731,11 +736,13 @@ func GetStocksHeldUnderPledgeDetails(Db *sql.DB, DbApproved *sql.DB, transId int
 
 func GetCashCollateralDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.TotalAssetsChild {
 
-	query := `SELECT 5 as id, 'Cash Collateral' as Item, ISNULL(FORMAT(9000,'###,###,##0'),'-') as amount, 'N/A' as status
-	--FROM ` + ReportTable + `CUSTOMER_SECURITY CS
-	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+	query := `SELECT ISNULL(CS.CUSTOMERSECURITY_KEY,'-') as id, ISNULL(SEC.TITLE,'-') as Item, ISNULL(FORMAT(CS.MARKETVALUE,'###,###,##0'),'-') as amount, 'secured' as status
+	FROM CUSTOMER_SECURITYAPPROVED CS 
+	LEFT JOIN CONFIG_SECURITY SEC on SEC.SECURITY_ID = CS.SECURITY_CODE
+	LEFT JOIN CONFIG_SECURITYCLASSIFICATION CH on CH.SECURITYCLASSIFICATION_ID = SEC.SECURITYCLASSIFICATION_ID
+	WHERE CS.CUSTOMER_CODE = ?1 and CH.SECURITYCLASSIFICATION_KEY = 'ColCl20'`
 
-	rows, err := Db.Query(query)
+	rows, err := Db.Query(query, referenceId)
 	if err != nil {
 		log.Printf("Error executing GetCashCollateralDetails query: %v", err)
 		return nil
@@ -762,11 +769,13 @@ func GetCashCollateralDetails(Db *sql.DB, DbApproved *sql.DB, transId int, refer
 
 func GetGopDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.TotalAssetsChild {
 
-	query := `SELECT 6 as id, 'Gop' as Item, ISNULL(FORMAT(10000,'###,###,##0'),'-') as amount, 'N/A' as status
-	--FROM ` + ReportTable + `CUSTOMER_SECURITY CS
-	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+	query := `SELECT ISNULL(CS.CUSTOMERSECURITY_KEY,'-') as id, ISNULL(SEC.TITLE,'-') as Item, ISNULL(FORMAT(CS.MARKETVALUE,'###,###,##0'),'-') as amount, 'secured' as status
+	FROM CUSTOMER_SECURITYAPPROVED CS 
+	LEFT JOIN CONFIG_SECURITY SEC on SEC.SECURITY_ID = CS.SECURITY_CODE
+	LEFT JOIN CONFIG_COLLATERALHANDLING CH on CH.COLLATERALHANDLING_ID = SEC.COLLATERALHANDLING_ID
+	WHERE CS.CUSTOMER_CODE = ?1 and CH.COLLATERALHANDLING_KEY = 'G'`
 
-	rows, err := Db.Query(query)
+	rows, err := Db.Query(query, referenceId)
 	if err != nil {
 		log.Printf("Error executing GetGopDetails query: %v", err)
 		return nil
@@ -793,11 +802,13 @@ func GetGopDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int,
 
 func GetPledgeOfSharesDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.TotalAssetsChild {
 
-	query := `SELECT 7 as id, 'Pledge of Shares' as Item, ISNULL(FORMAT(11000,'###,###,##0'),'-') as amount, 'N/A' as status
-	--FROM ` + ReportTable + `CUSTOMER_SECURITY CS
-	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+	query := `SELECT ISNULL(CS.CUSTOMERSECURITY_KEY,'-') as id, ISNULL(SEC.TITLE,'-') as Item, ISNULL(FORMAT(CS.MARKETVALUE,'###,###,##0'),'-') as amount, 'secured' as status
+	FROM CUSTOMER_SECURITYAPPROVED CS 
+	LEFT JOIN CONFIG_SECURITY SEC on SEC.SECURITY_ID = CS.SECURITY_CODE
+	LEFT JOIN CONFIG_COLLATERALHANDLING CH on CH.COLLATERALHANDLING_ID = SEC.COLLATERALHANDLING_ID
+	WHERE CS.CUSTOMER_CODE = ?1 and CH.COLLATERALHANDLING_KEY = 'P'`
 
-	rows, err := Db.Query(query)
+	rows, err := Db.Query(query, referenceId)
 	if err != nil {
 		log.Printf("Error executing GetPledgeOfSharesDetails query: %v", err)
 		return nil
@@ -824,17 +835,17 @@ func GetPledgeOfSharesDetails(Db *sql.DB, DbApproved *sql.DB, transId int, refer
 
 func GetCollateralSummaryDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.CollateralSummary {
 
-	query := `SELECT ISNULL(FORMAT(5000,'###,###,##0'),'-') as currentassetamount, 'secured' as currentassetstatus, 
-	ISNULL(FORMAT(6000,'###,###,##0'),'-') as fixedassetamount, 'secured' as fixedassetstatus,
-	ISNULL(FORMAT(7000,'###,###,##0'),'-') as mortgageamount, 'secured' as mortgagestatus,
-	ISNULL(FORMAT(8000,'###,###,##0'),'-') as stockamount, 'N/A' as stockstatus,
-	ISNULL(FORMAT(9000,'###,###,##0'),'-') as cashcollateralamount, 'N/A' as cashcollateralstatus,
-	ISNULL(FORMAT(10000,'###,###,##0'),'-') as gopamount, 'N/A' as gopstatus,
-	ISNULL(FORMAT(11000,'###,###,##0'),'-') as pledgeamount, 'N/A' as pledgestatus
-	--FROM ` + ReportTable + `CUSTOMER_SECURITY CS
-	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+	query := `SELECT 
+	(SELECT ISNULL(FORMAT(SUM(CS.MARKETVALUE),'###,###,##0'),0) as totalamount FROM CUSTOMER_SECURITYAPPROVED CS LEFT JOIN CONFIG_SECURITY SEC on SEC.SECURITY_ID = CS.SECURITY_CODE WHERE CS.CUSTOMER_CODE = CTL.REFERENCE_ID and SEC.SECURITY_KEY='S1914') as currentassetamount, 'secured' as currentassetstatus, 
+	(SELECT ISNULL(FORMAT(SUM(CS.MARKETVALUE),'###,###,##0'),0) as totalamount FROM CUSTOMER_SECURITYAPPROVED CS LEFT JOIN CONFIG_SECURITY SEC on SEC.SECURITY_ID = CS.SECURITY_CODE WHERE CS.CUSTOMER_CODE = CTL.REFERENCE_ID and SEC.SECURITY_KEY IN ('S1997','S2066','S2067','S2068','S2069','S2070')) as fixedassetamount, 'secured' as fixedassetstatus, 
+	(SELECT ISNULL(FORMAT(SUM(CS.MARKETVALUE),'###,###,##0'),0) as totalamount FROM CUSTOMER_SECURITYAPPROVED CS LEFT JOIN CONFIG_SECURITY SEC on SEC.SECURITY_ID = CS.SECURITY_CODE LEFT JOIN CONFIG_COLLATERALHANDLING CH on CH.COLLATERALHANDLING_ID = SEC.COLLATERALHANDLING_ID WHERE CS.CUSTOMER_CODE = CTL.REFERENCE_ID and CH.COLLATERALHANDLING_KEY = 'M') as mortgageamount, 'secured' as mortgagestatus, 
+	(SELECT ISNULL(FORMAT(SUM(CS.MARKETVALUE),'###,###,##0'),0) as totalamount FROM CUSTOMER_SECURITYAPPROVED CS LEFT JOIN CONFIG_SECURITY SEC on SEC.SECURITY_ID = CS.SECURITY_CODE WHERE CS.CUSTOMER_CODE = CTL.REFERENCE_ID and SEC.SECURITY_KEY IN ('S1899','S1901')) as stockamount, 'N/A' as stockstatus, 
+	(SELECT ISNULL(FORMAT(SUM(CS.MARKETVALUE),'###,###,##0'),0) as totalamount FROM CUSTOMER_SECURITYAPPROVED CS LEFT JOIN CONFIG_SECURITY SEC on SEC.SECURITY_ID = CS.SECURITY_CODE LEFT JOIN CONFIG_SECURITYCLASSIFICATION CH on CH.SECURITYCLASSIFICATION_ID = SEC.SECURITYCLASSIFICATION_ID WHERE CS.CUSTOMER_CODE = CTL.REFERENCE_ID and CH.SECURITYCLASSIFICATION_KEY = 'ColCl20') as cashcollateralamount, 'N/A' as cashcollateralstatus, 
+	(SELECT ISNULL(FORMAT(SUM(CS.MARKETVALUE),'###,###,##0'),0) as totalamount FROM CUSTOMER_SECURITYAPPROVED CS LEFT JOIN CONFIG_SECURITY SEC on SEC.SECURITY_ID = CS.SECURITY_CODE LEFT JOIN CONFIG_COLLATERALHANDLING CH on CH.COLLATERALHANDLING_ID = SEC.COLLATERALHANDLING_ID WHERE CS.CUSTOMER_CODE = CTL.REFERENCE_ID and CH.COLLATERALHANDLING_KEY = 'G') as gopamount, 'N/A' as gopstatus, 
+	(SELECT ISNULL(FORMAT(SUM(CS.MARKETVALUE),'###,###,##0'),0) as totalamount FROM CUSTOMER_SECURITYAPPROVED CS LEFT JOIN CONFIG_SECURITY SEC on SEC.SECURITY_ID = CS.SECURITY_CODE LEFT JOIN CONFIG_COLLATERALHANDLING CH on CH.COLLATERALHANDLING_ID = SEC.COLLATERALHANDLING_ID WHERE CS.CUSTOMER_CODE = CTL.REFERENCE_ID and CH.COLLATERALHANDLING_KEY = 'P') as pledgeamount, 'N/A' as pledgestatus 
+	FROM CUSTOMERTRANSACTIONLOG CTL WHERE CTL.TRANSACTION_ID = ?1`
 
-	rows, err := Db.Query(query)
+	rows, err := Db.Query(query, transId)
 	if err != nil {
 		log.Printf("Error executing GetCollateralSummaryDetails query: %v", err)
 		return nil
@@ -867,11 +878,12 @@ func GetCollateralSummaryDetails(Db *sql.DB, DbApproved *sql.DB, transId int, re
 
 func GetTotalCurrentAssetsDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.TotalAssetsChildTotal {
 
-	query := `SELECT ISNULL(FORMAT(SUM(5000),'###,###,##0'),'-') as amount
-	---FROM ` + ReportTable + `CUSTOMER_SECURITY CS
-	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+	query := `SELECT ISNULL(FORMAT(SUM(CS.MARKETVALUE),'###,###,##0'),'-') as totalamount 
+	FROM CUSTOMER_SECURITYAPPROVED CS 
+	LEFT JOIN CONFIG_SECURITY SEC on SEC.SECURITY_ID = CS.SECURITY_CODE
+	WHERE CS.CUSTOMER_CODE = ?1 and SEC.SECURITY_KEY='S1914'`
 
-	rows, err := Db.Query(query)
+	rows, err := Db.Query(query, referenceId)
 	if err != nil {
 		log.Printf("Error executing GetTotalCurrentAssetsDetails query: %v", err)
 		return nil
@@ -898,11 +910,12 @@ func GetTotalCurrentAssetsDetails(Db *sql.DB, DbApproved *sql.DB, transId int, r
 
 func GetTotalFixedAssetsDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.TotalAssetsChildTotal {
 
-	query := `SELECT ISNULL(FORMAT(SUM(6000),'###,###,##0'),'-') as amount
-	---FROM ` + ReportTable + `CUSTOMER_SECURITY CS
-	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+	query := `SELECT ISNULL(FORMAT(SUM(CS.MARKETVALUE),'###,###,##0'),'-') as totalamount 
+	FROM CUSTOMER_SECURITYAPPROVED CS 
+	LEFT JOIN CONFIG_SECURITY SEC on SEC.SECURITY_ID = CS.SECURITY_CODE
+	WHERE CS.CUSTOMER_CODE = ?1 and SEC.SECURITY_KEY IN ('S1997','S2066','S2067','S2068','S2069','S2070')`
 
-	rows, err := Db.Query(query)
+	rows, err := Db.Query(query, referenceId)
 	if err != nil {
 		log.Printf("Error executing GetTotalFixedAssetsDetails query: %v", err)
 		return nil
@@ -929,11 +942,13 @@ func GetTotalFixedAssetsDetails(Db *sql.DB, DbApproved *sql.DB, transId int, ref
 
 func GetTotalMortgageDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.TotalAssetsChildTotal {
 
-	query := `SELECT ISNULL(FORMAT(SUM(7000),'###,###,##0'),'-') as amount
-	---FROM ` + ReportTable + `CUSTOMER_SECURITY CS
-	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+	query := `SELECT ISNULL(FORMAT(SUM(CS.MARKETVALUE),'###,###,##0'),'-') as totalamount 
+	FROM CUSTOMER_SECURITYAPPROVED CS 
+	LEFT JOIN CONFIG_SECURITY SEC on SEC.SECURITY_ID = CS.SECURITY_CODE
+	LEFT JOIN CONFIG_COLLATERALHANDLING CH on CH.COLLATERALHANDLING_ID = SEC.COLLATERALHANDLING_ID
+	WHERE CS.CUSTOMER_CODE = ?1 and CH.COLLATERALHANDLING_KEY = 'M'`
 
-	rows, err := Db.Query(query)
+	rows, err := Db.Query(query, referenceId)
 	if err != nil {
 		log.Printf("Error executing GetTotalMortgageDetails query: %v", err)
 		return nil
@@ -960,11 +975,12 @@ func GetTotalMortgageDetails(Db *sql.DB, DbApproved *sql.DB, transId int, refere
 
 func GetTotalStocksHeldUnderPledgeDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.TotalAssetsChildTotal {
 
-	query := `SELECT ISNULL(FORMAT(SUM(8000),'###,###,##0'),'-') as amount
-	---FROM ` + ReportTable + `CUSTOMER_SECURITY CS
-	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+	query := `SELECT ISNULL(FORMAT(SUM(CS.MARKETVALUE),'###,###,##0'),'-') as totalamount 
+	FROM CUSTOMER_SECURITYAPPROVED CS 
+	LEFT JOIN CONFIG_SECURITY SEC on SEC.SECURITY_ID = CS.SECURITY_CODE
+	WHERE CS.CUSTOMER_CODE = ?1 and SEC.SECURITY_KEY IN ('S1899','S1901')`
 
-	rows, err := Db.Query(query)
+	rows, err := Db.Query(query, referenceId)
 	if err != nil {
 		log.Printf("Error executing GetTotalStocksHeldUnderPledgeDetails query: %v", err)
 		return nil
@@ -991,11 +1007,13 @@ func GetTotalStocksHeldUnderPledgeDetails(Db *sql.DB, DbApproved *sql.DB, transI
 
 func GetTotalCashCollateralDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.TotalAssetsChildTotal {
 
-	query := `SELECT ISNULL(FORMAT(SUM(9000),'###,###,##0'),'-') as amount
-	---FROM ` + ReportTable + `CUSTOMER_SECURITY CS
-	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+	query := `SELECT ISNULL(FORMAT(SUM(CS.MARKETVALUE),'###,###,##0'),'-') as totalamount 
+	FROM CUSTOMER_SECURITYAPPROVED CS 
+	LEFT JOIN CONFIG_SECURITY SEC on SEC.SECURITY_ID = CS.SECURITY_CODE
+	LEFT JOIN CONFIG_SECURITYCLASSIFICATION CH on CH.SECURITYCLASSIFICATION_ID = SEC.SECURITYCLASSIFICATION_ID
+	WHERE CS.CUSTOMER_CODE = ?1 and CH.SECURITYCLASSIFICATION_KEY = 'ColCl20'`
 
-	rows, err := Db.Query(query)
+	rows, err := Db.Query(query, referenceId)
 	if err != nil {
 		log.Printf("Error executing GetTotalCashCollateralDetails query: %v", err)
 		return nil
@@ -1022,11 +1040,13 @@ func GetTotalCashCollateralDetails(Db *sql.DB, DbApproved *sql.DB, transId int, 
 
 func GetTotalGopDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.TotalAssetsChildTotal {
 
-	query := `SELECT ISNULL(FORMAT(SUM(10000),'###,###,##0'),'-') as amount
-	---FROM ` + ReportTable + `CUSTOMER_SECURITY CS
-	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+	query := `SELECT ISNULL(FORMAT(SUM(CS.MARKETVALUE),'###,###,##0'),'-') as totalamount 
+	FROM CUSTOMER_SECURITYAPPROVED CS 
+	LEFT JOIN CONFIG_SECURITY SEC on SEC.SECURITY_ID = CS.SECURITY_CODE
+	LEFT JOIN CONFIG_COLLATERALHANDLING CH on CH.COLLATERALHANDLING_ID = SEC.COLLATERALHANDLING_ID
+	WHERE CS.CUSTOMER_CODE = ?1 and CH.COLLATERALHANDLING_KEY = 'G'`
 
-	rows, err := Db.Query(query)
+	rows, err := Db.Query(query, referenceId)
 	if err != nil {
 		log.Printf("Error executing GetTotalGopDetails query: %v", err)
 		return nil
@@ -1053,11 +1073,13 @@ func GetTotalGopDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId
 
 func GetTotalPledgeOfSharesDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.TotalAssetsChildTotal {
 
-	query := `SELECT ISNULL(FORMAT(SUM(11000),'###,###,##0'),'-') as amount
-	---FROM ` + ReportTable + `CUSTOMER_SECURITY CS
-	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+	query := `SELECT ISNULL(FORMAT(SUM(CS.MARKETVALUE),'###,###,##0'),'-') as totalamount 
+	FROM CUSTOMER_SECURITYAPPROVED CS 
+	LEFT JOIN CONFIG_SECURITY SEC on SEC.SECURITY_ID = CS.SECURITY_CODE
+	LEFT JOIN CONFIG_COLLATERALHANDLING CH on CH.COLLATERALHANDLING_ID = SEC.COLLATERALHANDLING_ID
+	WHERE CS.CUSTOMER_CODE = ?1 and CH.COLLATERALHANDLING_KEY = 'P'`
 
-	rows, err := Db.Query(query)
+	rows, err := Db.Query(query, referenceId)
 	if err != nil {
 		log.Printf("Error executing GetTotalPledgeOfSharesDetails query: %v", err)
 		return nil
@@ -1084,11 +1106,16 @@ func GetTotalPledgeOfSharesDetails(Db *sql.DB, DbApproved *sql.DB, transId int, 
 
 func GetTotalCollateralSummaryDetails(Db *sql.DB, DbApproved *sql.DB, transId int, referenceId int, alertActivityTypeKey string, fromApproved bool, ReportTable string) []CMS.TotalCollateralSummary {
 
-	query := `SELECT ISNULL(FORMAT(SUM(56000),'###,###,##0'),'-') as amount
-	---FROM ` + ReportTable + `CUSTOMER_SECURITY CS
-	--WHERE CS.TRANSACTIONINPROGRESS_CODE =?1`
+	query := `SELECT ISNULL( FORMAT( ( ISNULL(( SELECT SUM(CS.MARKETVALUE) FROM CUSTOMER_SECURITYAPPROVED CS LEFT JOIN CONFIG_SECURITY SEC ON SEC.SECURITY_ID = CS.SECURITY_CODE WHERE CS.CUSTOMER_CODE = CTL.REFERENCE_ID AND SEC.SECURITY_KEY = 'S1914' ), 0) 
+	+ ISNULL(( SELECT SUM(CS.MARKETVALUE) FROM CUSTOMER_SECURITYAPPROVED CS LEFT JOIN CONFIG_SECURITY SEC ON SEC.SECURITY_ID = CS.SECURITY_CODE WHERE CS.CUSTOMER_CODE = CTL.REFERENCE_ID AND SEC.SECURITY_KEY IN ('S1997','S2066','S2067','S2068','S2069','S2070') ), 0) 
+	+ ISNULL(( SELECT SUM(CS.MARKETVALUE) FROM CUSTOMER_SECURITYAPPROVED CS LEFT JOIN CONFIG_SECURITY SEC ON SEC.SECURITY_ID = CS.SECURITY_CODE LEFT JOIN CONFIG_COLLATERALHANDLING CH ON CH.COLLATERALHANDLING_ID = SEC.COLLATERALHANDLING_ID WHERE CS.CUSTOMER_CODE = CTL.REFERENCE_ID AND CH.COLLATERALHANDLING_KEY = 'M' ), 0) 
+	+ ISNULL(( SELECT SUM(CS.MARKETVALUE) FROM CUSTOMER_SECURITYAPPROVED CS LEFT JOIN CONFIG_SECURITY SEC ON SEC.SECURITY_ID = CS.SECURITY_CODE WHERE CS.CUSTOMER_CODE = CTL.REFERENCE_ID AND SEC.SECURITY_KEY IN ('S1899','S1901') ), 0) 
+	+ ISNULL(( SELECT SUM(CS.MARKETVALUE) FROM CUSTOMER_SECURITYAPPROVED CS LEFT JOIN CONFIG_SECURITY SEC ON SEC.SECURITY_ID = CS.SECURITY_CODE LEFT JOIN CONFIG_SECURITYCLASSIFICATION CH ON CH.SECURITYCLASSIFICATION_ID = SEC.SECURITYCLASSIFICATION_ID WHERE CS.CUSTOMER_CODE = CTL.REFERENCE_ID AND CH.SECURITYCLASSIFICATION_KEY = 'ColCl20' ), 0) 
+	+ ISNULL(( SELECT SUM(CS.MARKETVALUE) FROM CUSTOMER_SECURITYAPPROVED CS LEFT JOIN CONFIG_SECURITY SEC ON SEC.SECURITY_ID = CS.SECURITY_CODE LEFT JOIN CONFIG_COLLATERALHANDLING CH ON CH.COLLATERALHANDLING_ID = SEC.COLLATERALHANDLING_ID WHERE CS.CUSTOMER_CODE = CTL.REFERENCE_ID AND CH.COLLATERALHANDLING_KEY = 'G' ), 0) 
+	+ ISNULL(( SELECT SUM(CS.MARKETVALUE) FROM CUSTOMER_SECURITYAPPROVED CS LEFT JOIN CONFIG_SECURITY SEC ON SEC.SECURITY_ID = CS.SECURITY_CODE LEFT JOIN CONFIG_COLLATERALHANDLING CH ON CH.COLLATERALHANDLING_ID = SEC.COLLATERALHANDLING_ID WHERE CS.CUSTOMER_CODE = CTL.REFERENCE_ID AND CH.COLLATERALHANDLING_KEY = 'P' ), 0) ), '###,###,##0' ), 0 ) AS totalamount 
+	FROM CUSTOMERTRANSACTIONLOG CTL WHERE CTL.TRANSACTION_ID = ?1;`
 
-	rows, err := Db.Query(query)
+	rows, err := Db.Query(query, transId)
 	if err != nil {
 		log.Printf("Error executing GetTotalCollateralSummaryDetails query: %v", err)
 		return nil
